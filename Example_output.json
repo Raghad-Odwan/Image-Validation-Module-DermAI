@@ -1,0 +1,17 @@
+{
+  "status": "VALID",
+  "reason": null,
+  "message": "Image is valid and ready for analysis",
+  "details": {
+    "original_resolution": "1024x1024",
+    "laplacian_variance": 45.9,
+    "skin_ratio": 0.32,
+    "texture_analysis": {
+      "texture_variance": 45.9,
+      "edge_density": 0.021,
+      "std_deviation": 54.3
+    },
+    "skin_texture_detected": true,
+    "final_resolution": "224x224"
+  }
+}
