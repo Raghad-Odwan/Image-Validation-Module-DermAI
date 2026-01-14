@@ -1,34 +1,108 @@
-# DermAI - Image Validation Module
-This module performs automated validation for uploaded images before analysis.
-It checks image quality, resolution, blur level, and detects whether the content is actual skin or irrelevant objects.
+# DermAI – Image Validation Module
 
-The module ensures only valid dermatological images are sent to the main diagnostic model.
-It returns structured JSON responses indicating the validation status, reason, and detailed metrics.
+This repository contains the **image validation and quality-check module** used in the DermAI system.
+The module performs a series of **pre-inference checks** to verify whether an uploaded image is suitable for analysis by the skin lesion classification model.
 
-Designed for integration with backend endpoints (Flask/FastAPI).
+This component is **not a diagnostic model** and does not perform disease detection or classification.
 
-Main features:
+---
 
-Automatic detection of invalid or low-quality images
+## Purpose
 
-Blur detection using Laplacian variance
+The goal of this module is to:
 
-Skin ratio and texture pattern analysis
+* Filter out invalid or low-quality images
+* Prevent unsuitable inputs from reaching the AI classifier
+* Improve overall system reliability and user feedback
 
-Standardized JSON output for backend consumption
+---
 
-Files included:
+## Validation Checks Implemented
 
-image_validation.py – Core function (analyze_image())
+The validation pipeline applies multiple heuristic-based checks:
 
-Check.ipynb – Jupyter notebook for development and testing
+### 1. File Integrity
 
-requirements.txt – Dependencies list
+* Verifies file existence
+* Rejects corrupted or unreadable images
 
-README_integration.md – Integration and usage guide
+### 2. Resolution Check
 
-test_api.py – Optional local test script
+* Ensures minimum image resolution requirements are met
+* Prevents loss of detail during resizing
 
-Developed by: Raghad Odwan 
-Version: 1.0
-Date: [ 1 Nov. 2025]
+### 3. Blur Detection
+
+* Uses Laplacian variance to detect excessive blur
+* Rejects images unsuitable for feature extraction
+
+### 4. Skin Area Estimation
+
+* Estimates the proportion of skin pixels using HSV and YCrCb color spaces
+* Rejects images with insufficient visible skin region
+
+### 5. Texture Analysis
+
+* Analyzes edge density, texture variance, and grayscale statistics
+* Filters images with patterns inconsistent with typical skin textures
+* Rejects overly smooth images with no visible lesion-like structures
+
+---
+
+## Output Format
+
+The module returns a structured response containing:
+
+* Validation status (`valid` or `error`)
+* Rejection reason (if applicable)
+* Human-readable feedback message
+* Diagnostic details (e.g., blur score, skin ratio)
+* Preprocessed image ready for model inference (for valid inputs)
+
+---
+
+## Role in the DermAI System
+
+This module acts as a **gatekeeper** between user input and the AI classifier.
+Only images that pass all validation checks are forwarded to the final classification and explainability stages.
+
+---
+
+## Implementation Notes
+
+* Implemented using OpenCV and NumPy
+* Designed to be lightweight and suitable for real-time usage
+* Uses heuristic thresholds selected empirically during development
+
+> **Important:**
+> This module does **not** guarantee medical validity of images.
+> It only evaluates technical suitability for model inference.
+
+---
+
+## File Structure
+
+```
+Image-Validation-Module-DermAI/
+├── check.py
+└── README.md
+```
+
+---
+
+## Limitations
+
+* Skin detection relies on color-based heuristics and may fail under extreme lighting conditions
+* Thresholds are empirically chosen and may not generalize to all image sources
+* This module does not replace clinical image acquisition standards
+
+---
+
+## Developer
+
+**Raghad Mousleh**
+AI Engineer
+
+--
+
+احكي 👍
