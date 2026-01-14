@@ -1,17 +1,67 @@
 # Image Validation Module — Integration Guide
 
 ## Overview
-This module validates uploaded images before analysis.  
-It checks image resolution, blur level, and skin ratio, and rejects unsuitable inputs (e.g., non-skin, low-quality, or object images).
+
+This module performs **technical validation checks** on uploaded images before they are passed to the AI classification model in the DermAI system.
+Its purpose is to ensure that only images with sufficient quality and appropriate visual characteristics are forwarded for analysis.
+
+This module does **not** perform medical diagnosis or disease detection.
+
+---
+
+## Purpose
+
+The validation module is designed to:
+
+* Filter invalid or corrupted image files
+* Reject low-quality or unsuitable images
+* Prevent non-skin or irrelevant images from reaching the AI model
+* Improve system robustness and user feedback
+
+---
+
+## Validation Checks
+
+The following checks are applied sequentially:
+
+### 1. File Integrity
+
+* Verifies that the file exists
+* Ensures the image can be loaded correctly
+
+### 2. Resolution Check
+
+* Ensures minimum resolution requirements are met
+* Prevents loss of information during resizing
+
+### 3. Blur Detection
+
+* Uses Laplacian variance to detect excessive blur
+* Rejects images unsuitable for feature extraction
+
+### 4. Skin Area Estimation
+
+* Estimates the proportion of visible skin using HSV and YCrCb color spaces
+* Rejects images with insufficient skin coverage
+
+### 5. Texture Analysis
+
+* Evaluates edge density, texture variance, and grayscale statistics
+* Filters images with patterns inconsistent with typical skin texture
+* Rejects overly smooth images where no lesion-like structure is visible
 
 ---
 
 ## Requirements
+
+Install dependencies using:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-**requirements.txt**
+### requirements.txt
+
 ```
 opencv-python
 numpy
@@ -20,9 +70,10 @@ Pillow
 
 ---
 
-## Function
+## Usage
+
 ```python
-from image_validation import analyze_image
+from check import analyze_image
 
 result = analyze_image("path_to_image.jpg")
 print(result)
@@ -31,9 +82,10 @@ print(result)
 ---
 
 ## Example Output
+
 ```json
 {
-  "status": "VALID",
+  "status": "valid",
   "reason": null,
   "message": "Image is valid and ready for analysis",
   "details": {
@@ -54,28 +106,72 @@ print(result)
 ---
 
 ## Possible Responses
-| Status | Reason | Message |
-|---------|---------|----------|
-| VALID | — | Image is valid and ready for analysis |
-| REJECTED | low_resolution | Image resolution too low (minimum 224x224) |
-| REJECTED | blurry | Image is too blurry for analysis |
-| REJECTED | not_skin | Insufficient skin area detected |
-| REJECTED | not_skin_pattern | Pattern inconsistent with skin (likely object/wall) |
-| REJECTED | not_skin_texture | Texture too rough (likely furniture/object) |
+
+| Status | Reason             | Description                                    |
+| ------ | ------------------ | ---------------------------------------------- |
+| valid  | —                  | Image passed all validation checks             |
+| error  | file_not_found     | File path does not exist                       |
+| error  | invalid_image      | File is corrupted or unreadable                |
+| error  | low_resolution     | Image resolution below minimum requirement     |
+| error  | blurry             | Image is too blurry for reliable analysis      |
+| error  | not_skin           | Insufficient visible skin area detected        |
+| error  | not_skin_pattern   | Image contains patterns inconsistent with skin |
+| error  | not_skin_texture   | Image texture inconsistent with skin           |
+| error  | no_lesion_detected | No visible lesion-like structure detected      |
+
+---
+
+## Output Description
+
+The returned dictionary contains:
+
+* `status`: Validation result (`valid` or `error`)
+* `reason`: Rejection reason (if applicable)
+* `message`: User-facing explanation
+* `details`: Diagnostic metrics and intermediate values
+* `processed_image`: Preprocessed image ready for model inference (only if valid)
 
 ---
 
 ## Integration Notes
-- The function returns a Python dictionary (JSON ready).
-- It can be wrapped inside an endpoint `/validate-image` in Flask or FastAPI.
-- Expected use flow:
-  1. Backend receives uploaded file.
+
+* The function returns a Python dictionary that is JSON-ready.
+* Intended to be used as a **pre-inference gatekeeper**.
+* Typical backend workflow:
+
+  1. Backend receives uploaded image.
   2. Calls `analyze_image()` with the file path.
-  3. Returns the JSON result to the front-end.
+  3. If status is `valid`, forwards the processed image to the AI classifier.
+  4. If status is `error`, returns the validation message to the client.
 
 ---
 
-## Maintainer
-AI Engineer: [Your Name]  
-Version: 1.0  
-Last Updated: [Date]
+## System Role
+
+This module acts as an intermediate layer between user input and the AI classifier.
+It improves system reliability by preventing unsuitable inputs from affecting classification and explainability stages.
+
+---
+
+## Limitations
+
+* Validation is heuristic-based and may fail under extreme lighting conditions
+* Skin detection relies on color-based thresholds
+* This module evaluates **technical suitability only**, not medical correctness
+
+---
+
+## File Structure
+
+```
+Image-Validation-Module-DermAI/
+├── check.py
+└── README.md
+```
+
+---
+**Raghad Mousleh**
+AI Engineer
+
+
+بس احكي 👍
